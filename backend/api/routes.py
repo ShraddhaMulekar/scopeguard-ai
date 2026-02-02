@@ -1,10 +1,10 @@
-from fastapi import APIRoter, HTTPException
+from fastapi import APIRouter, HTTPException
 from schemas.request import ProjectRequest
 from schemas.response import AnalysisResponse
 from llm.client import get_llm
 from llm.prompts import PROJECT_ANALYSIS_PROMPT
 
-router = APIRoter()
+router = APIRouter()
 
 @router.post("/analyze", response_model=AnalysisResponse)
 def analyze_project(data:ProjectRequest):
