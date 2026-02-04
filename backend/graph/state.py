@@ -1,15 +1,12 @@
-from typing import TypedDict
+from typing import TypedDict, Optional, List
 
-class ProjectState(TypedDict):
-    idea:str
-    experience: str
-    time: str
-    team: int
-    tech: str
+class ScopeState(TypedDict):
+    project_description: str
+    timeline_weeks: Optional[int]
+    team_size: Optional[int]
+    experience_level: Optional[str]
 
-    scope_risk:str
-    time_risk:str
-    skill_risk:str
-    tech_risk:str
-
-    final_analysis:str
+    missing_fields: List[str]
+    risk_score: Optional[int]
+    decision: Optional[str]
+    message: Optional[str]
