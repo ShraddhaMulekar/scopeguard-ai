@@ -1,12 +1,24 @@
 from typing import TypedDict, Optional, List
 
-class ScopeState(TypedDict):
-    project_description: str
-    timeline_weeks: Optional[int]
-    team_size: Optional[int]
-    experience_level: Optional[str]
+class ProjectState(TypedDict):
+    # ===== User Inputs =====
+    idea: str
+    experience: Optional[str]        # beginner / intermediate / expert
+    time_weeks: Optional[int]        # numeric for scoring
+    team: Optional[int]
+    tech: Optional[str]
 
-    missing_fields: List[str]
-    risk_score: Optional[int]
-    decision: Optional[str]
-    message: Optional[str]
+    # ===== Internal Agent Logic =====
+    missing_fields: List[str]         # for follow-up questions
+    decision: Optional[str]           # ASK_FOLLOWUP / ANALYZE / HIGH_RISK / LOW_RISK
+
+    # ===== Risk Analysis =====
+    scope_risk: Optional[int]
+    time_risk: Optional[int]
+    skill_risk: Optional[int]
+    tech_risk: Optional[int]
+    total_risk: Optional[int]
+
+    # ===== Output =====
+    final_analysis: Optional[str]
+    message: Optional[str]            # user-facing response
