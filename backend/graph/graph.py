@@ -1,28 +1,46 @@
 from langgraph.graph import StateGraph, END
 from graph.state import ProjectState
 from graph.nodes import (
-    scope_risk_node,
-    time_risk_node,
-    skill_risk_node,
-    tech_risk_node,
-    final_decision_node
+    detect_missing_info,
+    followup_node,
+    risk_analysis_node,
+    high_risk_node,
+    low_risk_node
 )
 
 def build_graph():
     graph = StateGraph(ProjectState)
 
-    graph.add_node("scope", scope_risk_node)
-    graph.add_node("time", time_risk_node)
-    graph.add_node("skill", skill_risk_node)
-    graph.add_node("tech", tech_risk_node)
-    graph.add_node("final", final_decision_node)
+    graph.add_node("detect_missing", detect_missing_info)
+    graph.add_node("followup", followup_node)
+    graph.add_node("risk_analysis", risk_analysis_node)
+    graph.add_node("high_risk", high_risk_node)
+    graph.add_node("low_risk", low_risk_node)
 
-    graph.set_entry_point("scope")
 
-    graph.add_edge("scope", "time")
-    graph.add_edge("time", "skill")
-    graph.add_edge("skill", "tech")
-    graph.add_edge("tech", "final")
-    graph.add_edge("final", END)
+    graph.set_entry_point("detect_missing")
+
+    graph.add_conditional_edges(
+        "detect_missing",
+        lambda state: state["decision"],
+        {
+            "ASK_FOLLOWUP": "followup",
+            "ANALYZE_RISK": "risk_analysis"
+        }
+    )
+
+    graph.add_conditional_edges(
+        "risk_analysis",
+        lambda state: state["decision"],
+        {
+            "HIGH_RISK": "high_risk",
+            "LOW_RISK": "low_risk"
+        }
+    )
+
+
+    graph.add_edge("followup", END)
+    graph.add_edge("high_risk", END)
+    graph.add_edge("low_risk", END)
 
     return graph.compile()
