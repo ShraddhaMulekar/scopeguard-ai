@@ -1,57 +1,64 @@
+from typing import List
 from llm.client import get_llm
+from graph.risk_utils import calculate_risk
 
-llm = get_llm()  
+llm = get_llm()
 
-def scope_risk_node(state):
-    response = llm.invoke(f"""
-    Analyze project scope risk.
-    Project idea: {state['idea']}
-    Experience: {state['experience']}
-    Time: {state['time']}
-    """)
-    state["scope_risk"] = response.content
+REQUIRED_FIELDS = ["experience", "time_weeks", "team", "tech"]
+
+def detect_missing_info(state):
+    missing = []
+
+    for field in REQUIRED_FIELDS:
+        if not state.get(field):
+            missing.append(field)
+
+    state["missing_fields"] = missing
+
+    if missing:
+        state["decision"] = "ASK_FOLLOWUP"
+    else:
+        state["decision"] = "ANALYZE_RISK"
+
     return state
 
 
-def time_risk_node(state):
-    response = llm.invoke(f"""
-    Analyze time risk.
-    Time available: {state['time']}
-    Project idea: {state['idea']}
-    """)
-    state["time_risk"] = response.content
+def followup_node(state):
+    questions = []
+
+    if "experience" in state["missing_fields"]:
+        questions.append("What is your experience level? (beginner/intermediate/expert)")
+
+    if "time_weeks" in state["missing_fields"]:
+        questions.append("How many weeks do you have for this project?")
+
+    if "team" in state["missing_fields"]:
+        questions.append("How many people are in your team?")
+
+    if "tech" in state["missing_fields"]:
+        questions.append("What tech stack are you planning to use?")
+
+    state["message"] = "I need a bit more info before analyzing:\n" + "\n".join(questions)
     return state
 
 
-def skill_risk_node(state):
-    response = llm.invoke(f"""
-    Analyze skill risk.
-    Experience level: {state['experience']}
-    Tech stack: {state['tech']}
-    """)
-    state["skill_risk"] = response.content
-    return state
+def risk_analysis_node(state):
+    scope_risk, time_risk, skill_risk, tech_risk, total = calculate_risk(
+        time_weeks=state["time_weeks"],
+        team_size=state["team"],
+        experience=state["experience"],
+        tech=state["tech"]
+    )
 
+    state["scope_risk"] = scope_risk
+    state["time_risk"] = time_risk
+    state["skill_risk"] = skill_risk
+    state["tech_risk"] = tech_risk
+    state["total_risk"] = total
 
-def tech_risk_node(state):
-    response = llm.invoke(f"""
-    Analyze technology risk.
-    Tech stack: {state['tech']}
-    Team size: {state['team']}
-    """)
-    state["tech_risk"] = response.content
-    return state
+    if total >= 60:
+        state["decision"] = "HIGH_RISK"
+    else:
+        state["decision"] = "LOW_RISK"
 
-
-def final_decision_node(state):
-    response = llm.invoke(f"""
-    Based on the following risks, predict project failure probability
-    and give a clear recommendation.
-
-    Scope Risk: {state['scope_risk']}
-    Time Risk: {state['time_risk']}
-    Skill Risk: {state['skill_risk']}
-    Tech Risk: {state['tech_risk']}
-    """)
-    state["final_analysis"] = response.content
     return state
