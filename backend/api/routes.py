@@ -12,34 +12,33 @@ def analyze_project(data: ProjectRequest):
     Handles missing info, high/low risk, and safe LLM calls.
     """
 
-    # Build initial state from request
+    # ✅ Build initial state correctly
     input_state = {
         "idea": data.idea,
         "experience": data.experience,
-        "time_weeks": data.time,  # renamed for consistency with state.py
+        "time_weeks": data.time_weeks,  
         "team": data.team,
         "tech": data.tech
     }
 
     try:
-        # Run the full LangGraph workflow
+        # Run LangGraph workflow
         result = run_risk_analysis(input_state)
 
-        # Handle follow-up scenario
+        # 🔁 FOLLOW-UP REQUIRED
         if result.get("decision") == "ASK_FOLLOWUP":
-            return {
-                "analysis": None,
-                "followup_questions": result.get("message", [])
-            }
+            return AnalysisResponse(
+                analysis=None,
+                followup_questions=result.get("message", [])
+            )
 
-        # Handle final analysis scenario
-        return {
-            "analysis": result.get("final_analysis"),
-            "followup_questions": []
-        }
+        # ✅ FINAL ANALYSIS
+        return AnalysisResponse(
+            analysis=result.get("final_analysis", ""),
+            followup_questions=[]
+        )
 
     except Exception as e:
-        # Safe fallback
         raise HTTPException(
             status_code=500,
             detail=f"ScopeGuard AI failed: {str(e)}"

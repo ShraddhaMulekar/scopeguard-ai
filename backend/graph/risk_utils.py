@@ -1,6 +1,7 @@
 """
 Deterministic risk engine for ScopeGuard AI
 No LLM calls allowed in this file
+Pure logic + predictable output
 """
 
 def calculate_risk(time_weeks, team_size, experience, tech):
@@ -8,6 +9,10 @@ def calculate_risk(time_weeks, team_size, experience, tech):
     Returns:
     scope_risk, time_risk, skill_risk, tech_risk, total_risk
     """
+
+    # Normalize inputs
+    experience = experience.lower()
+    tech = tech.lower()
 
     # Scope vs Time Risk
     if time_weeks <= 2:
@@ -31,17 +36,23 @@ def calculate_risk(time_weeks, team_size, experience, tech):
     else:
         skill_risk = 5
 
-    # Tech Risk
-    high_risk_tech = ["llm", "blockchain", "ai", "ml"]
+    # Tech Risk (keyword-based)
+    high_risk_tech_keywords = [
+        "llm", "ai", "ml", "blockchain", "crypto", "web3"
+    ]
 
-    if tech.lower() in high_risk_tech and experience == "beginner":
+    uses_high_risk_tech = any(
+        keyword in tech for keyword in high_risk_tech_keywords
+    )
+
+    if uses_high_risk_tech and experience == "beginner":
         tech_risk = 25
-    elif tech.lower() in high_risk_tech:
+    elif uses_high_risk_tech:
         tech_risk = 15
     else:
         tech_risk = 5
 
-    # Team Size Adjustment
+    # Team Size Modifier
     if team_size == 1:
         team_modifier = 15
     elif team_size <= 3:
@@ -49,6 +60,7 @@ def calculate_risk(time_weeks, team_size, experience, tech):
     else:
         team_modifier = 0
 
+    # Final Risk Score
     total_risk = (
         scope_risk +
         time_risk +

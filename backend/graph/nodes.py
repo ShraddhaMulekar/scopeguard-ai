@@ -1,6 +1,8 @@
 from typing import List
 from llm.client import get_llm
 from graph.risk_utils import calculate_risk
+from llm.prompts import (HIGH_RISK_EXPLANATION_PROMPT, LOW_RISK_EXPLANATION_PROMPT)
+from llm.client import safe_invoke
 
 llm = get_llm()
 
@@ -61,4 +63,31 @@ def risk_analysis_node(state):
     else:
         state["decision"] = "LOW_RISK"
 
+    return state
+
+# High Risk Node
+def high_risk_node(state: dict):
+    prompt = HIGH_RISK_EXPLANATION_PROMPT.format(
+        idea=state["idea"],
+        total_risk=state["total_risk"],
+        scope_risk=state["scope_risk"],
+        time_risk=state["time_risk"],
+        skill_risk=state["skill_risk"],
+        tech_risk=state["tech_risk"]
+    )
+    # Use safe_invoke to avoid crashing if Groq is down
+    state["final_analysis"] = safe_invoke(llm, prompt)
+    state["decision"] = "FINAL"
+    print("High FINAL STATE:", state)
+    return state
+
+# Low Risk Node
+def low_risk_node(state):
+    prompt = LOW_RISK_EXPLANATION_PROMPT.format(
+        idea=state["idea"],
+        total_risk=state["total_risk"]
+    )
+    state["final_analysis"] = safe_invoke(llm, prompt)
+    state["decision"] = "FINAL"
+    print("low FINAL STATE:", state)
     return state
