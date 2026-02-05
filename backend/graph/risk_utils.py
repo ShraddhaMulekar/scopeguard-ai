@@ -78,3 +78,20 @@ def calculate_risk(time_weeks, team_size, experience, tech):
         tech_risk,
         total_risk
     )
+
+def generate_recommendations(state):
+    recs = []
+
+    if state["time_risk"] >= 20:
+        recs.append("Increase project timeline or reduce features")
+
+    if state["skill_risk"] >= 20:
+        recs.append("Start with a simpler version before using AI")
+
+    if state["tech_risk"] >= 20:
+        recs.append("Avoid advanced AI tools in the first version")
+
+    if state["team"] == 1:
+        recs.append("Limit scope or collaborate with others")
+
+    return recs
