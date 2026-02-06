@@ -35,16 +35,23 @@ def analyze_project(data: ProjectRequest):
                 summary=result["final_analysis"]["summary"],
                 key_issues=result["final_analysis"]["key_issues"],
                 recommendations=result["final_analysis"]["recommendations"],
-                followup_questions=[]
+                followup_questions=result("message", [])
             )
 
         # ✅ FINAL ANALYSIS
+        final = result["final_analysis"]
         return AnalysisResponse(
-                risk_level=result["final_analysis"]["risk_level"],
-                risk_score=result["final_analysis"]["risk_score"],
-                summary=result["final_analysis"]["summary"],
-                key_issues=result["final_analysis"]["key_issues"],
-                recommendations=result["final_analysis"]["recommendations"],
+                # risk_level=result["final_analysis"]["risk_level"],
+                # risk_score=result["final_analysis"]["risk_score"],
+                # summary=result["final_analysis"]["summary"],
+                # key_issues=result["final_analysis"]["key_issues"],
+                # recommendations=result["final_analysis"]["recommendations"],
+                # followup_questions=[]
+                risk_level=final["risk_level"],
+                risk_score=final["risk_score"],
+                summary=final["summary"],
+                key_issues=final["key_issues"],
+                recommendations=final["recommendations"],
                 followup_questions=[]
         )
 

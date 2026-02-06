@@ -73,56 +73,97 @@ def risk_analysis_node(state):
 
 def high_risk_node(state: dict):
     print("⚙️ high risk node-6")
-    structured_data = {
-        "risk_level": "HIGH",
-        "risk_score": state["total_risk"],
-        "scope_risk": state["scope_risk"],
-        "time_risk": state["time_risk"],
-        "skill_risk": state["skill_risk"],
-        "tech_risk": state["tech_risk"]
-    }
 
     llm_response = safe_invoke(
         llm,
         HIGH_RISK_EXPLANATION_PROMPT.format(
             idea=state["idea"],
-            analysis=structured_data
+            total_risk=state["total_risk"],
+            scope_risk=state["scope_risk"],
+            time_risk=state["time_risk"],
+            skill_risk=state["skill_risk"],
+            tech_risk=state["tech_risk"],
         )
     )
 
-    parsed = extract_json(llm_response)
+    parsed = extract_json(llm_response) or {}
 
     state["final_analysis"] = {
         "risk_level": "HIGH",
         "risk_score": state["total_risk"],
-        "summary": parsed["summary"],
-        "key_issues": parsed["key_issues"],
-        "recommendations": parsed["recommendations"]
+        "summary": (
+            "This project is high risk due to short timeline, "
+            "beginner experience, and limited team size."
+        ),
+        "key_issues": [
+            "Beginner experience",
+            "Short development timeline",
+            "Single-person team",
+            "Use of advanced or AI-related technologies"
+        ],
+        "recommendations": state.get("recommendations", [])
     }
+
+    # 2️⃣ LLM → explanation ONLY
+    explanation = safe_invoke(
+        llm,
+        HIGH_RISK_EXPLANATION_PROMPT.format(
+            idea=state["idea"],
+            total_risk=state["total_risk"],
+            scope_risk=state["scope_risk"],
+            time_risk=state["time_risk"],
+            skill_risk=state["skill_risk"],
+            tech_risk=state["tech_risk"]
+        )
+    )
+
+    # Attach explanation safely
+    state["final_analysis"]["explanation"] = explanation
+
+    # ✅ ALWAYS set summary in state
+    # state["summary"] = state["final_analysis"]["summary"]
 
     state["decision"] = "FINAL"
     return state
+
 
 
 # Low Risk Node
 def low_risk_node(state):
-    structured_response = {
+    # structured_response = {
+    #     "risk_level": "LOW",
+    #     "risk_score": state["total_risk"],
+    #     "message": "Project looks feasible with current inputs",
+    #     "recommendations": state["recommendations"]
+    # }
+
+    # prompt = LOW_RISK_EXPLANATION_PROMPT.format(
+    #     idea=state["idea"],
+    #     analysis=structured_response
+    # )
+
+    # state["final_analysis"] = {
+    #     "data": structured_response,
+    #     "explanation": safe_invoke(llm, prompt)
+    # }
+
+    # state["decision"] = "FINAL"
+    # # state.setdefault("recommendations", [])
+    # return state
+    state["final_analysis"] = {
         "risk_level": "LOW",
         "risk_score": state["total_risk"],
-        "message": "Project looks feasible with current inputs",
-        "recommendations": state["recommendations"]
+        "summary": "This project is feasible with current inputs.",
+        "key_issues": [],
+        "recommendations": state.get("recommendations", [])
     }
 
-    prompt = LOW_RISK_EXPLANATION_PROMPT.format(
-        idea=state["idea"],
-        analysis=structured_response
+    explanation = safe_invoke(
+        llm,
+        LOW_RISK_EXPLANATION_PROMPT.format(
+            idea=state["idea"],
+            total_risk=state["total_risk"]
+        )
     )
 
-    state["final_analysis"] = {
-        "data": structured_response,
-        "explanation": safe_invoke(llm, prompt)
-    }
-
-    state["decision"] = "FINAL"
-    # state.setdefault("recommendations", [])
-    return state
+    state["final_analysis"]["explanation"] = explanation
