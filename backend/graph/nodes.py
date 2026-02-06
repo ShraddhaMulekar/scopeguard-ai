@@ -72,6 +72,7 @@ def risk_analysis_node(state):
 # High Risk Node
 
 def high_risk_node(state: dict):
+    print("⚙️ high risk node-6")
     structured_data = {
         "risk_level": "HIGH",
         "risk_score": state["total_risk"],

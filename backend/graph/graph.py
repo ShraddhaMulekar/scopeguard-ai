@@ -15,6 +15,7 @@ def route_by_risk(state):
 
 
 def build_graph():
+    print("🧩 Building graph-5")
     graph = StateGraph(ProjectState)
 
     # Nodes

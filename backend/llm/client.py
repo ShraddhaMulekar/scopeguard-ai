@@ -7,6 +7,7 @@ def get_llm():
     Returns Groq LLM client.
     This function ONLY creates the client.
     """
+    print("🤖 LLM client loaded-7")
     if not GROQ_API_KEY:
         raise ValueError("GROQ_API_KEY is missing")
 

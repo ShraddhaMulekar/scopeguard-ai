@@ -6,3 +6,5 @@ class ProjectRequest(BaseModel):
     time_weeks:int
     team:int
     tech:str
+
+    print("schema-request-2")

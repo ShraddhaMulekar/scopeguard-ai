@@ -23,3 +23,5 @@ class ProjectState(TypedDict):
     final_analysis: Optional[str]
     message: Optional[str]            # user-facing response
     recommendations: Optional[str]
+
+    print("🧾 Mapping final state response-4")

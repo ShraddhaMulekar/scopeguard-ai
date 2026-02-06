@@ -11,6 +11,8 @@ def analyze_project(data: ProjectRequest):
     Analyze a project idea using ScopeGuard AI.
     Handles missing info, high/low risk, and safe LLM calls.
     """
+    print("\n🚀 API HIT /analyze")
+    print("📥 Incoming request1:", data)
 
     # ✅ Build initial state correctly
     input_state = {
@@ -20,11 +22,11 @@ def analyze_project(data: ProjectRequest):
         "team": data.team,
         "tech": data.tech
     }
-    print(input_state,'input_state')
+    print('input_state-routes1',input_state)
     try:
         # Run LangGraph workflow
         result = run_risk_analysis(input_state)
-        print(result, 'result27')
+        print(result, 'result27-routes1')
         # 🔁 FOLLOW-UP REQUIRED
         if result.get("decision") == "ASK_FOLLOWUP":
             return AnalysisResponse(

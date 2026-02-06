@@ -10,6 +10,7 @@ def run_risk_analysis(input_state: ProjectState):
     Entry point to run ScopeGuard risk analysis
     Ensures state is always complete
     """
+    print("\n🧠 Enter run_risk_analysis-3")
 
     # Normalize / default state
     state = {
@@ -33,10 +34,10 @@ def run_risk_analysis(input_state: ProjectState):
         "tech_risk": 0,
         "total_risk": 0,
     }
-    print(state,"state")
+    print("state-workflow-runRisk def3:", state)
     # Invoke LangGraph safely
     result = risk_graph.invoke(state)
-    print("run risk", result,state)
+    print("run risk result3:", result,state)
     return result
 
 
