@@ -23,20 +23,28 @@ def run_risk_analysis(input_state: ProjectState):
         "missing_fields": [],
         "decision": None,
         "message": None,
-        "final_analysis": None
-    }
+        "final_analysis": None,
+        "recommendations": [],
 
+            # Risk scores (IMPORTANT)
+        "scope_risk": 0,
+        "time_risk": 0,
+        "skill_risk": 0,
+        "tech_risk": 0,
+        "total_risk": 0,
+    }
+    print(state,"state")
     # Invoke LangGraph safely
     result = risk_graph.invoke(state)
-    print("run risk", result)
+    print("run risk", result,state)
     return result
 
 
-if __name__ == "__main__":
-    test_input = {
-        "idea": "AI Resume Analyzer",
-        "team": 1
-    }
+# if __name__ == "__main__":
+#     test_input = {
+#         "idea": "AI Resume Analyzer",
+#         "team": 1
+#     }
 
-    output = run_risk_analysis(test_input)
-    print(output)
+#     output = run_risk_analysis(test_input)
+#     print(output)

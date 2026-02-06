@@ -20,22 +20,30 @@ def analyze_project(data: ProjectRequest):
         "team": data.team,
         "tech": data.tech
     }
-
+    print(input_state,'input_state')
     try:
         # Run LangGraph workflow
         result = run_risk_analysis(input_state)
-
+        print(result, 'result27')
         # 🔁 FOLLOW-UP REQUIRED
         if result.get("decision") == "ASK_FOLLOWUP":
             return AnalysisResponse(
-                analysis=None,
-                followup_questions=result.get("message", [])
+                risk_level=result["final_analysis"]["risk_level"],
+                risk_score=result["final_analysis"]["risk_score"],
+                summary=result["final_analysis"]["summary"],
+                key_issues=result["final_analysis"]["key_issues"],
+                recommendations=result["final_analysis"]["recommendations"],
+                followup_questions=[]
             )
 
         # ✅ FINAL ANALYSIS
         return AnalysisResponse(
-            analysis=result.get("final_analysis", ""),
-            followup_questions=[]
+                risk_level=result["final_analysis"]["risk_level"],
+                risk_score=result["final_analysis"]["risk_score"],
+                summary=result["final_analysis"]["summary"],
+                key_issues=result["final_analysis"]["key_issues"],
+                recommendations=result["final_analysis"]["recommendations"],
+                followup_questions=[]
         )
 
     except Exception as e:

@@ -1,8 +1,9 @@
 from typing import List
 from llm.client import get_llm
-from graph.risk_utils import calculate_risk
+from graph.risk_utils import calculate_risk, generate_recommendations, extract_json
 from llm.prompts import (HIGH_RISK_EXPLANATION_PROMPT, LOW_RISK_EXPLANATION_PROMPT)
 from llm.client import safe_invoke
+
 
 llm = get_llm()
 
@@ -45,7 +46,7 @@ def followup_node(state):
 
 
 def risk_analysis_node(state):
-    scope_risk, time_risk, skill_risk, tech_risk, total = calculate_risk(
+    scope_risk, time_risk, skill_risk, tech_risk, total_risk = calculate_risk(
         time_weeks=state["time_weeks"],
         team_size=state["team"],
         experience=state["experience"],
@@ -56,9 +57,12 @@ def risk_analysis_node(state):
     state["time_risk"] = time_risk
     state["skill_risk"] = skill_risk
     state["tech_risk"] = tech_risk
-    state["total_risk"] = total
+    state["total_risk"] = total_risk
 
-    if total >= 60:
+    # ✅ ADD THIS LINE (THIS FIXES YOUR ERROR)
+    state["recommendations"] = generate_recommendations(state)
+
+    if total_risk >= 60:
         state["decision"] = "HIGH_RISK"
     else:
         state["decision"] = "LOW_RISK"
@@ -66,28 +70,58 @@ def risk_analysis_node(state):
     return state
 
 # High Risk Node
+
 def high_risk_node(state: dict):
-    prompt = HIGH_RISK_EXPLANATION_PROMPT.format(
-        idea=state["idea"],
-        total_risk=state["total_risk"],
-        scope_risk=state["scope_risk"],
-        time_risk=state["time_risk"],
-        skill_risk=state["skill_risk"],
-        tech_risk=state["tech_risk"]
+    structured_data = {
+        "risk_level": "HIGH",
+        "risk_score": state["total_risk"],
+        "scope_risk": state["scope_risk"],
+        "time_risk": state["time_risk"],
+        "skill_risk": state["skill_risk"],
+        "tech_risk": state["tech_risk"]
+    }
+
+    llm_response = safe_invoke(
+        llm,
+        HIGH_RISK_EXPLANATION_PROMPT.format(
+            idea=state["idea"],
+            analysis=structured_data
+        )
     )
-    # Use safe_invoke to avoid crashing if Groq is down
-    state["final_analysis"] = safe_invoke(llm, prompt)
+
+    parsed = extract_json(llm_response)
+
+    state["final_analysis"] = {
+        "risk_level": "HIGH",
+        "risk_score": state["total_risk"],
+        "summary": parsed["summary"],
+        "key_issues": parsed["key_issues"],
+        "recommendations": parsed["recommendations"]
+    }
+
     state["decision"] = "FINAL"
-    print("High FINAL STATE:", state)
     return state
+
 
 # Low Risk Node
 def low_risk_node(state):
+    structured_response = {
+        "risk_level": "LOW",
+        "risk_score": state["total_risk"],
+        "message": "Project looks feasible with current inputs",
+        "recommendations": state["recommendations"]
+    }
+
     prompt = LOW_RISK_EXPLANATION_PROMPT.format(
         idea=state["idea"],
-        total_risk=state["total_risk"]
+        analysis=structured_response
     )
-    state["final_analysis"] = safe_invoke(llm, prompt)
+
+    state["final_analysis"] = {
+        "data": structured_response,
+        "explanation": safe_invoke(llm, prompt)
+    }
+
     state["decision"] = "FINAL"
-    print("low FINAL STATE:", state)
+    # state.setdefault("recommendations", [])
     return state

@@ -1,3 +1,6 @@
+import json
+import re
+
 """
 Deterministic risk engine for ScopeGuard AI
 No LLM calls allowed in this file
@@ -83,15 +86,47 @@ def generate_recommendations(state):
     recs = []
 
     if state["time_risk"] >= 20:
-        recs.append("Increase project timeline or reduce features")
+        recs.append({
+            "type": "timeline",
+            "message": "Increase project timeline or reduce features"
+        })
 
     if state["skill_risk"] >= 20:
-        recs.append("Start with a simpler version before using AI")
+        recs.append({
+            "type": "skill",
+            "message": "Start with a simpler version before using advanced features"
+        })
 
     if state["tech_risk"] >= 20:
-        recs.append("Avoid advanced AI tools in the first version")
+        recs.append({
+            "type": "tech",
+            "message": "Avoid complex or experimental technologies in the first version"
+        })
 
     if state["team"] == 1:
-        recs.append("Limit scope or collaborate with others")
+        recs.append({
+            "type": "team",
+            "message": "Limit scope or collaborate with others"
+        })
 
     return recs
+
+
+
+def extract_json(text: str) -> dict:
+    """
+    Extracts first valid JSON object from LLM output safely.
+    """
+    try:
+        # Try direct parse first
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    # Try to extract JSON block
+    match = re.search(r"\{[\s\S]*\}", text)
+    if not match:
+        raise ValueError("No JSON object found in LLM response")
+
+    return json.loads(match.group())
+

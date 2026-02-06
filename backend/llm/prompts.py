@@ -1,37 +1,35 @@
 from langchain_core.prompts import PromptTemplate
 
 # High Risk Explanation Prompt
+
 HIGH_RISK_EXPLANATION_PROMPT = PromptTemplate(
-    input_variables=[
-        "idea",
-        "total_risk",
-        "scope_risk",
-        "time_risk",
-        "skill_risk",
-        "tech_risk"
-    ],
+    input_variables=["idea", "analysis"],
     template="""
 You are a senior software architect.
 
-A deterministic system has already classified the following project as HIGH RISK.
+Based on the data below, return ONLY valid JSON.
+Do NOT include explanations outside JSON.
+Do NOT use markdown.
+Do NOT add extra text.
 
-Project Idea: {idea}
+Project: {idea}
+Risk data: {analysis}
 
-Risk Scores:
-- Scope Risk: {scope_risk}
-- Time Risk: {time_risk}
-- Skill Risk: {skill_risk}
-- Tech Risk: {tech_risk}
-- Total Risk: {total_risk}
+Return JSON in EXACTLY this format:
 
-Explain clearly:
-• Why this project is risky
-• Which factors contribute most
-• What typically goes wrong in such cases
-
-Do NOT calculate risk.
-Do NOT suggest final decisions.
-Explain in simple bullet points.
+{
+  "summary": "one paragraph explanation in simple words",
+  "key_issues": [
+    "issue 1",
+    "issue 2",
+    "issue 3"
+  ],
+  "recommendations": [
+    "recommendation 1",
+    "recommendation 2",
+    "recommendation 3"
+  ]
+}
 """
 )
 

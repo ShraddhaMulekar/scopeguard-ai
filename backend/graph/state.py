@@ -22,3 +22,4 @@ class ProjectState(TypedDict):
     # ===== Output =====
     final_analysis: Optional[str]
     message: Optional[str]            # user-facing response
+    recommendations: Optional[str]
