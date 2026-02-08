@@ -54,7 +54,13 @@ def followup_node(state):
     if "tech" in state["missing_fields"]:
         questions.append("What tech stack are you planning to use?")
 
-    state["message"] = "I need a bit more info before analyzing:\n" + "\n".join(questions)
+    state["message"] = questions
+
+    state["final_analysis"] = {
+        "summary": "More information is required before risk analysis.",
+        "key_issues": [],
+        "recommendations": []
+    }
     return state
 
 
@@ -73,7 +79,9 @@ def risk_analysis_node(state):
     state["total_risk"] = total_risk
 
     # ✅ ADD THIS LINE (THIS FIXES YOUR ERROR)
-    state["recommendations"] = generate_recommendations(state)
+    state["recommendations"] = [
+        rec["message"] for rec in generate_recommendations(state)
+    ]
 
     if total_risk >= 60:
         state["decision"] = "HIGH_RISK"
@@ -138,36 +146,66 @@ def risk_analysis_node(state):
 
 def high_risk_node(state: ProjectState) -> ProjectState:
     print("🔥 ENTERED high_risk_node")
-    prompt = HIGH_RISK_EXPLANATION_PROMPT.format(
-        idea=state["idea"],
-        analysis={
-            "scope_risk": state["scope_risk"],
-            "time_risk": state["time_risk"],
-            "skill_risk": state["skill_risk"],
-            "tech_risk": state["tech_risk"],
-            "total_risk": state["total_risk"],
-        }
-    )
+    print("State at entry:", state)
 
+    # --- Build prompt manually ---
+    prompt_text = f"""
+You are a senior software architect.
+
+Based on the data below, return ONLY valid JSON.
+Do NOT include explanations outside JSON.
+Do NOT use markdown.
+Do NOT add extra text.
+
+Project: {state['idea']}
+Risk data:
+  scope_risk: {state['scope_risk']}
+  time_risk: {state['time_risk']}
+  skill_risk: {state['skill_risk']}
+  tech_risk: {state['tech_risk']}
+  total_risk: {state['total_risk']}
+
+Return JSON in EXACTLY this format:
+
+{{
+  "summary": "one paragraph explanation in simple words",
+  "key_issues": [
+    "issue 1",
+    "issue 2",
+    "issue 3"
+  ],
+  "recommendations": [
+    "recommendation 1",
+    "recommendation 2",
+    "recommendation 3"
+  ]
+}}
+"""
     print("🟡 BEFORE LLM CALL")
-    raw = safe_invoke(llm, prompt)
-    print("🟢 AFTER LLM CALL")
 
+    # --- Call LLM safely ---
+    try:
+        raw = safe_invoke(llm, prompt_text)
+    except Exception as e:
+        print("❌ AI call failed:", e)
+        raw = """{
+            "summary": "High risk detected, but AI explanation unavailable.",
+            "key_issues": ["Risk assessment completed"],
+            "recommendations": ["Review project manually"]
+        }"""
+
+    print("🟢 AFTER LLM CALL")
     print("🧠 RAW LLM OUTPUT:\n", raw)
 
-    try:
-        parsed = extract_json_safe(raw)
-    except Exception:
-        parsed = {}
-
-    # ✅ GUARANTEED STRUCTURE (NO CRASH)
+    # --- Parse AI response safely ---
+    parsed = extract_json_safe(raw)
     summary = parsed.get(
-        "summary","This project is considered high risk based on multiple constraints."
+        "summary", "This project is considered high risk based on multiple constraints."
     )
-
     key_issues = parsed.get("key_issues", [])
     recommendations = parsed.get("recommendations", [])
 
+    # --- Update state ---
     state["final_analysis"] = {
         "risk_level": "HIGH",
         "risk_score": state["total_risk"],
@@ -178,6 +216,7 @@ def high_risk_node(state: ProjectState) -> ProjectState:
 
     state["decision"] = "FINAL"
     return state
+
 
 
 # Low Risk Node

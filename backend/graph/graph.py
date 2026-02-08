@@ -9,6 +9,7 @@ from graph.nodes import (
 )
 
 def route_by_risk(state):
+    print("total_risk",state["total_risk"])
     if state["total_risk"] >= 60:
         return "HIGH"
     return "LOW"

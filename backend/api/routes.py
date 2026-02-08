@@ -7,14 +7,6 @@ router = APIRouter()
 
 @router.post("/analyze")
 def analyze_project(data: ProjectRequest):
-    """
-    Analyze a project idea using ScopeGuard AI.
-    Handles missing info, high/low risk, and safe LLM calls.
-    """
-    print("\n🚀 API HIT /analyze")
-    print("📥 Incoming request1:", data)
-
-    # ✅ Build initial state correctly
     input_state = {
         "idea": data.idea,
         "experience": data.experience,
@@ -22,16 +14,20 @@ def analyze_project(data: ProjectRequest):
         "team": data.team,
         "tech": data.tech
     }
-    # print('data',data)
-    print('input_state-routes1',input_state)
     try:
         # Run LangGraph workflow
         result = run_risk_analysis(input_state)
-        print("RESULT TYPE:", type(result))
-        print("RESULT KEYS:", result.keys())
-        print("DECISION:", result.get("decision"))
-        print("FINAL_ANALYSIS:", result.get("final_analysis"))
+        decision = result.get("decision")
+        if decision == "ASK_FOLLOWUP":
+            return {
+                "decision": "ASK_FOLLOWUP",
+                "questions": result.get("message", [])
+            }
 
+        return {
+            "decision": "FINAL",
+            "final_analysis": result["final_analysis"]
+        }
         # 🔁 FOLLOW-UP REQUIRED
         if result.get("decision") == "ASK_FOLLOWUP":
             return AnalysisResponse(

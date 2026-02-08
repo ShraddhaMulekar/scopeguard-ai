@@ -5,13 +5,7 @@ from graph.state import ProjectState
 risk_graph = build_graph()
 
 
-def run_risk_analysis(input_state: ProjectState):
-    """
-    Entry point to run ScopeGuard risk analysis
-    Ensures state is always complete
-    """
-    print("\n🧠 Enter run_risk_analysis-3")
-
+def run_risk_analysis(input_state):
     # Normalize / default state
     state = {
         "idea": input_state.get("idea", ""),
@@ -19,14 +13,12 @@ def run_risk_analysis(input_state: ProjectState):
         "time_weeks": input_state.get("time_weeks"),
         "team": input_state.get("team"),
         "tech": input_state.get("tech"),
-
         # Graph-controlled fields
         "missing_fields": [],
         "decision": None,
         "message": None,
         "final_analysis": None,
         "recommendations": [],
-
             # Risk scores (IMPORTANT)
         "scope_risk": 0,
         "time_risk": 0,
@@ -34,10 +26,7 @@ def run_risk_analysis(input_state: ProjectState):
         "tech_risk": 0,
         "total_risk": 0,
     }
-    print("state-workflow-runRisk def3:", state)
-    # Invoke LangGraph safely
     result = risk_graph.invoke(state)
-    print("run risk result3:", result,state)
     return result
 
 

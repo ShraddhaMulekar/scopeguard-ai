@@ -1,7 +1,7 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, TypedDict
 
-class AnalysisResponse(BaseModel):
+class AnalysisResponse(TypedDict):
     risk_level: str
     risk_score: int
     summary: str
