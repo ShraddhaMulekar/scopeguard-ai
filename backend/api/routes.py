@@ -5,7 +5,7 @@ from graph.workflow import run_risk_analysis
 
 router = APIRouter()
 
-@router.post("/analyze")
+@router.post("/analyze", response_model=AnalysisResponse)
 def analyze_project(data: ProjectRequest):
     input_state = {
         "idea": data.idea,
@@ -14,40 +14,38 @@ def analyze_project(data: ProjectRequest):
         "team": data.team,
         "tech": data.tech
     }
+
     try:
         # Run LangGraph workflow
         result = run_risk_analysis(input_state)
         decision = result.get("decision")
-        if decision == "ASK_FOLLOWUP":
-            return {
-                "decision": "ASK_FOLLOWUP",
-                "questions": result.get("message", [])
-            }
 
-        return {
-            "decision": "FINAL",
-            "final_analysis": result["final_analysis"]
-        }
-        # 🔁 FOLLOW-UP REQUIRED
-        if result.get("decision") == "ASK_FOLLOWUP":
+        if decision == "ASK_FOLLOWUP":
+            # Return only followup questions for missing info
             return AnalysisResponse(
-                risk_level=result["final_analysis"]["risk_level"],
-                risk_score=result["final_analysis"]["risk_score"],
-                summary=result["final_analysis"]["summary"],
-                key_issues=result["final_analysis"]["key_issues"],
-                recommendations=result["final_analysis"]["recommendations"],
-                followup_questions=result("message", [])
+                risk_level="UNKNOWN",
+                risk_score=0,
+                summary="",
+                key_issues=[],
+                recommendations=[],
+                explanation=None,
+                followup_questions=result.get("message", [])
             )
 
         # ✅ FINAL ANALYSIS
         final = result["final_analysis"]
+
+        # Explanation is already structured (why_feasible, assumptions, monitoring)
+        explanation_obj = final.get("explanation", None)
+
         return AnalysisResponse(
-                risk_level=final["risk_level"],
-                risk_score=final["risk_score"],
-                summary=final["summary"],
-                key_issues=final["key_issues"],
-                recommendations=final["recommendations"],
-                followup_questions=[]
+            risk_level=final["risk_level"],
+            risk_score=final["risk_score"],
+            summary=final.get("summary", ""),
+            key_issues=final.get("key_issues", []),
+            recommendations=final.get("recommendations", []),
+            explanation=explanation_obj,
+            followup_questions=[]
         )
 
     except Exception as e:

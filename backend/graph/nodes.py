@@ -145,9 +145,6 @@ def risk_analysis_node(state):
 #     return state
 
 def high_risk_node(state: ProjectState) -> ProjectState:
-    print("🔥 ENTERED high_risk_node")
-    print("State at entry:", state)
-
     # --- Build prompt manually ---
     prompt_text = f"""
 You are a senior software architect.
@@ -220,27 +217,8 @@ Return JSON in EXACTLY this format:
 
 
 # Low Risk Node
-def low_risk_node(state):
-    # structured_response = {
-    #     "risk_level": "LOW",
-    #     "risk_score": state["total_risk"],
-    #     "message": "Project looks feasible with current inputs",
-    #     "recommendations": state["recommendations"]
-    # }
-
-    # prompt = LOW_RISK_EXPLANATION_PROMPT.format(
-    #     idea=state["idea"],
-    #     analysis=structured_response
-    # )
-
-    # state["final_analysis"] = {
-    #     "data": structured_response,
-    #     "explanation": safe_invoke(llm, prompt)
-    # }
-
-    # state["decision"] = "FINAL"
-    # # state.setdefault("recommendations", [])
-    # return state
+def low_risk_node(state:ProjectState) ->ProjectState:
+    # Base analysis
     state["final_analysis"] = {
         "risk_level": "LOW",
         "risk_score": state["total_risk"],
@@ -249,14 +227,39 @@ def low_risk_node(state):
         "recommendations": state.get("recommendations", [])
     }
 
-    explanation = safe_invoke(
-        llm,
-        LOW_RISK_EXPLANATION_PROMPT.format(
-            idea=state["idea"],
-            total_risk=state["total_risk"]
-        )
-    )
+    # Prompt for LLM (plain text)
+    prompt_text = f"""
+You are a senior software architect.
 
-    state["final_analysis"]["explanation"] = explanation
+A deterministic system has classified the following project as LOW RISK.
+
+Project Idea: {state['idea']}
+Total Risk Score: {state['total_risk']}
+
+Provide structured explanation in JSON format with keys:
+- "why_feasible" : list of strings
+- "assumptions" : list of strings
+- "monitoring" : list of strings
+Do NOT include markdown, just plain text.
+"""
+
+    # Call LLM safely
+    raw_response = safe_invoke(llm, prompt_text)
+
+    # Parse AI output as JSON safely
+    try:
+        explanation_structured = extract_json_safe(raw_response)
+    except Exception:
+        # fallback if AI fails
+        explanation_structured = {
+            "why_feasible": ["The project is considered low risk based on available data."],
+            "assumptions": [],
+            "monitoring": []
+        }
+
+    # Store structured explanation
+    state["final_analysis"]["explanation"] = explanation_structured
     state["decision"] = "FINAL"
+
     return state
+
