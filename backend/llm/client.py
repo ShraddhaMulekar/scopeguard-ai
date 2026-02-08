@@ -26,7 +26,7 @@ def safe_invoke(llm, prompt: str) -> str:
     """
     try:
         response = llm.invoke(prompt)
-        return response.content
+        return response.content if hasattr(response, "content") else str(response)
     except Exception as e:
         return (
             "⚠️ AI service is temporarily unavailable.\n"

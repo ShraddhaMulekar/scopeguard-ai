@@ -3,11 +3,24 @@ from llm.client import get_llm
 from graph.risk_utils import calculate_risk, generate_recommendations, extract_json
 from llm.prompts import (HIGH_RISK_EXPLANATION_PROMPT, LOW_RISK_EXPLANATION_PROMPT)
 from llm.client import safe_invoke
+from schemas.schema import HighRiskLLMResponse
+import json
+from graph.state import ProjectState
 
 
 llm = get_llm()
 
 REQUIRED_FIELDS = ["experience", "time_weeks", "team", "tech"]
+
+import json
+import re
+
+def extract_json_safe(text: str) -> dict:
+    match = re.search(r"\{[\s\S]*\}", text)
+    if not match:
+        raise ValueError("No JSON object found in LLM output")
+    return json.loads(match.group())
+
 
 def detect_missing_info(state):
     missing = []
@@ -71,61 +84,100 @@ def risk_analysis_node(state):
 
 # High Risk Node
 
-def high_risk_node(state: dict):
-    print("⚙️ high risk node-6")
+# def high_risk_node(state: dict):
+#     print("⚙️ high risk node-6")
 
-    llm_response = safe_invoke(
-        llm,
-        HIGH_RISK_EXPLANATION_PROMPT.format(
-            idea=state["idea"],
-            total_risk=state["total_risk"],
-            scope_risk=state["scope_risk"],
-            time_risk=state["time_risk"],
-            skill_risk=state["skill_risk"],
-            tech_risk=state["tech_risk"],
-        )
+#     llm_response = safe_invoke(
+#         llm,
+#         HIGH_RISK_EXPLANATION_PROMPT.format(
+#             idea=state["idea"],
+#             total_risk=state["total_risk"],
+#             scope_risk=state["scope_risk"],
+#             time_risk=state["time_risk"],
+#             skill_risk=state["skill_risk"],
+#             tech_risk=state["tech_risk"],
+#         )
+#     )
+
+#     parsed = extract_json(llm_response) or {}
+
+#     state["final_analysis"] = {
+#         "risk_level": "HIGH",
+#         "risk_score": state["total_risk"],
+#         "summary":"This project is high risk due to short timeline, ",
+#         "key_issues": [
+#             "Beginner experience",
+#             "Short development timeline",
+#             "Single-person team",
+#             "Use of advanced or AI-related technologies"
+#         ],
+#         "recommendations": []
+#     }
+
+#     # 2️⃣ LLM → explanation ONLY
+#     explanation = safe_invoke(
+#         llm,
+#         HIGH_RISK_EXPLANATION_PROMPT.format(
+#             idea=state["idea"],
+#             total_risk=state["total_risk"],
+#             scope_risk=state["scope_risk"],
+#             time_risk=state["time_risk"],
+#             skill_risk=state["skill_risk"],
+#             tech_risk=state["tech_risk"]
+#         )
+#     )
+
+#     # Attach explanation safely
+#     state["final_analysis"]["explanation"] = explanation
+
+#     # ✅ ALWAYS set summary in state
+#     # state["summary"] = state["final_analysis"]["summary"]
+
+#     state["decision"] = "FINAL"
+#     return state
+
+def high_risk_node(state: ProjectState) -> ProjectState:
+    print("🔥 ENTERED high_risk_node")
+    prompt = HIGH_RISK_EXPLANATION_PROMPT.format(
+        idea=state["idea"],
+        analysis={
+            "scope_risk": state["scope_risk"],
+            "time_risk": state["time_risk"],
+            "skill_risk": state["skill_risk"],
+            "tech_risk": state["tech_risk"],
+            "total_risk": state["total_risk"],
+        }
     )
 
-    parsed = extract_json(llm_response) or {}
+    print("🟡 BEFORE LLM CALL")
+    raw = safe_invoke(llm, prompt)
+    print("🟢 AFTER LLM CALL")
+
+    print("🧠 RAW LLM OUTPUT:\n", raw)
+
+    try:
+        parsed = extract_json_safe(raw)
+    except Exception:
+        parsed = {}
+
+    # ✅ GUARANTEED STRUCTURE (NO CRASH)
+    summary = parsed.get(
+        "summary","This project is considered high risk based on multiple constraints."
+    )
+
+    key_issues = parsed.get("key_issues", [])
+    recommendations = parsed.get("recommendations", [])
 
     state["final_analysis"] = {
         "risk_level": "HIGH",
         "risk_score": state["total_risk"],
-        "summary": (
-            "This project is high risk due to short timeline, "
-            "beginner experience, and limited team size."
-        ),
-        "key_issues": [
-            "Beginner experience",
-            "Short development timeline",
-            "Single-person team",
-            "Use of advanced or AI-related technologies"
-        ],
-        "recommendations": state.get("recommendations", [])
+        "summary": summary,
+        "key_issues": key_issues,
+        "recommendations": recommendations
     }
-
-    # 2️⃣ LLM → explanation ONLY
-    explanation = safe_invoke(
-        llm,
-        HIGH_RISK_EXPLANATION_PROMPT.format(
-            idea=state["idea"],
-            total_risk=state["total_risk"],
-            scope_risk=state["scope_risk"],
-            time_risk=state["time_risk"],
-            skill_risk=state["skill_risk"],
-            tech_risk=state["tech_risk"]
-        )
-    )
-
-    # Attach explanation safely
-    state["final_analysis"]["explanation"] = explanation
-
-    # ✅ ALWAYS set summary in state
-    # state["summary"] = state["final_analysis"]["summary"]
 
     state["decision"] = "FINAL"
     return state
-
 
 
 # Low Risk Node
@@ -167,3 +219,5 @@ def low_risk_node(state):
     )
 
     state["final_analysis"]["explanation"] = explanation
+    state["decision"] = "FINAL"
+    return state
