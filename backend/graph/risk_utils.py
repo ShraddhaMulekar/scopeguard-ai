@@ -19,8 +19,8 @@ def calculate_risk(time_weeks, team_size, experience, tech):
 
     # Scope vs Time Risk
     if time_weeks <= 2:
-        scope_risk = 30
-        time_risk = 30
+        scope_risk = 50
+        time_risk = 50
     elif time_weeks <= 4:
         scope_risk = 20
         time_risk = 20
