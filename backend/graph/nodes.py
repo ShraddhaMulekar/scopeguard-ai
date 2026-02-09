@@ -38,31 +38,6 @@ def detect_missing_info(state):
 
     return state
 
-
-# def followup_node(state):
-#     questions = []
-
-#     if "experience" in state["missing_fields"]:
-#         questions.append("What is your experience level? (beginner/intermediate/expert)")
-
-#     if "time_weeks" in state["missing_fields"]:
-#         questions.append("How many weeks do you have for this project?")
-
-#     if "team" in state["missing_fields"]:
-#         questions.append("How many people are in your team?")
-
-#     if "tech" in state["missing_fields"]:
-#         questions.append("What tech stack are you planning to use?")
-
-#     state["message"] = questions
-
-#     state["final_analysis"] = {
-#         "summary": "More information is required before risk analysis.",
-#         "key_issues": [],
-#         "recommendations": []
-#     }
-#     return state
-
 # follow up Node
 def followup_clarification_node(state: ProjectState) -> ProjectState:
     missing = state.get("missing_fields", [])

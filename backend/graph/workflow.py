@@ -28,13 +28,3 @@ def run_risk_analysis(input_state):
     }
     result = risk_graph.invoke(state)
     return result
-
-
-# if __name__ == "__main__":
-#     test_input = {
-#         "idea": "AI Resume Analyzer",
-#         "team": 1
-#     }
-
-#     output = run_risk_analysis(test_input)
-#     print(output)
