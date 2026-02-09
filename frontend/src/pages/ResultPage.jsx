@@ -1,9 +1,26 @@
-import React from 'react'
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const ResultPage = () => {
-  return (
-    <div>ResultPage</div>
-  )
-}
+  const location = useLocation();
+  const navigate = useNavigate();
+  const data = location.state;
 
-export default ResultPage
+  if (!data) {
+    return <p>No result found.</p>;
+  }
+
+  return (
+    <div className="container">
+      <button onClick={() => navigate("/")}>← Back</button>
+
+      {data.risk_level === "HIGH" ? (
+        <HighRiskCard data={data} />
+      ) : (
+        <LowRiskCard data={data} />
+      )}
+    </div>
+  );
+};
+
+export default ResultPage;
