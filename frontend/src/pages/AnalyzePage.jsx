@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { analyzeProject } from "../api";
+import Spinner from "../components/Spinner"
 
 const AnalyzePage = () => {
   const navigate = useNavigate();
+  console.log("AnalyzePage rendering");
 
   const [form, setForm] = useState({
     idea: "",
@@ -35,8 +37,9 @@ const AnalyzePage = () => {
         time_weeks: Number(form.time_weeks),
         team: Number(form.team),
       })
+      console.log("result:", result)
 
-      // navigate("/result", { state: result })
+      navigate("/result", { state: result })
     } catch (error) {
       setError("Something went wrong. Please try again.", error);
       console.log(error)
@@ -93,7 +96,7 @@ const AnalyzePage = () => {
         </button>
       </form>
 
-      {loading}
+      {loading && <Spinner />}
       {error && <p className="error">{error}</p>}
     </div>
   );
