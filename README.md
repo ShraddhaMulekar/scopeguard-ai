@@ -1,18 +1,20 @@
 # scopeguard-ai
 
-backend localhost:
+Backend localhost:
 uvicorn main:app --reload
 
-backend deploy (render) link:
+Backend deploy (render) link:
 https://scopeguard-ai-backend.onrender.com
 
+--------------------------------
 
-frontend localhost:
+Frontend localhost:
 npm run start
 
-frontend deploy (vercel) link:
+Frontend deploy (vercel) link:
 https://scopeguard-ai-eight.vercel.app/
 
+---------------------------------
 
 GitHub link:
 https://github.com/ShraddhaMulekar/scopeguard-ai
