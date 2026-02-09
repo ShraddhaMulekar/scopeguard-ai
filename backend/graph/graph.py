@@ -2,7 +2,7 @@ from langgraph.graph import StateGraph, END
 from graph.state import ProjectState
 from graph.nodes import (
     detect_missing_info,
-    followup_node,
+    followup_clarification_node,
     risk_analysis_node,
     high_risk_node,
     low_risk_node
@@ -21,7 +21,7 @@ def build_graph():
 
     # Nodes
     graph.add_node("detect_missing", detect_missing_info)
-    graph.add_node("followup", followup_node)
+    graph.add_node("followup", followup_clarification_node)
     graph.add_node("risk_analysis", risk_analysis_node)
     graph.add_node("high_risk", high_risk_node )
     graph.add_node("low_risk", low_risk_node )

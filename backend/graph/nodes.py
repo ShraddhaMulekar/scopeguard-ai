@@ -1,7 +1,7 @@
 from typing import List
 from llm.client import get_llm
 from graph.risk_utils import calculate_risk, generate_recommendations, extract_json
-from llm.prompts import (HIGH_RISK_EXPLANATION_PROMPT, LOW_RISK_EXPLANATION_PROMPT)
+from llm.prompts import (HIGH_RISK_EXPLANATION_PROMPT, LOW_RISK_EXPLANATION_PROMPT, FOLLOWUP_CLARIFICATION_PROMPT)
 from llm.client import safe_invoke
 from schemas.schema import HighRiskLLMResponse
 import json
@@ -39,28 +39,47 @@ def detect_missing_info(state):
     return state
 
 
-def followup_node(state):
-    questions = []
+# def followup_node(state):
+#     questions = []
 
-    if "experience" in state["missing_fields"]:
-        questions.append("What is your experience level? (beginner/intermediate/expert)")
+#     if "experience" in state["missing_fields"]:
+#         questions.append("What is your experience level? (beginner/intermediate/expert)")
 
-    if "time_weeks" in state["missing_fields"]:
-        questions.append("How many weeks do you have for this project?")
+#     if "time_weeks" in state["missing_fields"]:
+#         questions.append("How many weeks do you have for this project?")
 
-    if "team" in state["missing_fields"]:
-        questions.append("How many people are in your team?")
+#     if "team" in state["missing_fields"]:
+#         questions.append("How many people are in your team?")
 
-    if "tech" in state["missing_fields"]:
-        questions.append("What tech stack are you planning to use?")
+#     if "tech" in state["missing_fields"]:
+#         questions.append("What tech stack are you planning to use?")
 
-    state["message"] = questions
+#     state["message"] = questions
 
-    state["final_analysis"] = {
-        "summary": "More information is required before risk analysis.",
-        "key_issues": [],
-        "recommendations": []
-    }
+#     state["final_analysis"] = {
+#         "summary": "More information is required before risk analysis.",
+#         "key_issues": [],
+#         "recommendations": []
+#     }
+#     return state
+
+# follow up Node
+def followup_clarification_node(state: ProjectState) -> ProjectState:
+    missing = state.get("missing_fields", [])
+
+    if not missing:
+        return state  # nothing to ask
+
+    prompt = FOLLOWUP_CLARIFICATION_PROMPT.format(
+        missing_fields=", ".join(missing)
+    )
+
+    raw = safe_invoke(llm, prompt)
+    parsed = extract_json_safe(raw)
+
+    state["decision"] = "ASK_FOLLOWUP"
+    state["message"] = parsed.get("questions", [])
+
     return state
 
 
@@ -91,59 +110,6 @@ def risk_analysis_node(state):
     return state
 
 # High Risk Node
-
-# def high_risk_node(state: dict):
-#     print("⚙️ high risk node-6")
-
-#     llm_response = safe_invoke(
-#         llm,
-#         HIGH_RISK_EXPLANATION_PROMPT.format(
-#             idea=state["idea"],
-#             total_risk=state["total_risk"],
-#             scope_risk=state["scope_risk"],
-#             time_risk=state["time_risk"],
-#             skill_risk=state["skill_risk"],
-#             tech_risk=state["tech_risk"],
-#         )
-#     )
-
-#     parsed = extract_json(llm_response) or {}
-
-#     state["final_analysis"] = {
-#         "risk_level": "HIGH",
-#         "risk_score": state["total_risk"],
-#         "summary":"This project is high risk due to short timeline, ",
-#         "key_issues": [
-#             "Beginner experience",
-#             "Short development timeline",
-#             "Single-person team",
-#             "Use of advanced or AI-related technologies"
-#         ],
-#         "recommendations": []
-#     }
-
-#     # 2️⃣ LLM → explanation ONLY
-#     explanation = safe_invoke(
-#         llm,
-#         HIGH_RISK_EXPLANATION_PROMPT.format(
-#             idea=state["idea"],
-#             total_risk=state["total_risk"],
-#             scope_risk=state["scope_risk"],
-#             time_risk=state["time_risk"],
-#             skill_risk=state["skill_risk"],
-#             tech_risk=state["tech_risk"]
-#         )
-#     )
-
-#     # Attach explanation safely
-#     state["final_analysis"]["explanation"] = explanation
-
-#     # ✅ ALWAYS set summary in state
-#     # state["summary"] = state["final_analysis"]["summary"]
-
-#     state["decision"] = "FINAL"
-#     return state
-
 def high_risk_node(state: ProjectState) -> ProjectState:
     # --- Build prompt manually ---
     prompt_text = f"""
@@ -178,7 +144,7 @@ Return JSON in EXACTLY this format:
   ]
 }}
 """
-    print("🟡 BEFORE LLM CALL")
+    # print("🟡 BEFORE LLM CALL")
 
     # --- Call LLM safely ---
     try:
@@ -191,8 +157,8 @@ Return JSON in EXACTLY this format:
             "recommendations": ["Review project manually"]
         }"""
 
-    print("🟢 AFTER LLM CALL")
-    print("🧠 RAW LLM OUTPUT:\n", raw)
+    # print("🟢 AFTER LLM CALL")
+    # print("🧠 RAW LLM OUTPUT:\n", raw)
 
     # --- Parse AI response safely ---
     parsed = extract_json_safe(raw)
@@ -213,8 +179,6 @@ Return JSON in EXACTLY this format:
 
     state["decision"] = "FINAL"
     return state
-
-
 
 # Low Risk Node
 def low_risk_node(state:ProjectState) ->ProjectState:
@@ -262,4 +226,3 @@ Do NOT include markdown, just plain text.
     state["decision"] = "FINAL"
 
     return state
-

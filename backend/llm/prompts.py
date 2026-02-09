@@ -57,15 +57,37 @@ Respond in concise bullet points.
 )
 
 # Follow-up Clarification Prompt 
+# FOLLOWUP_CLARIFICATION_PROMPT = PromptTemplate(
+#     input_variables=["missing_fields"],
+#     template="""
+# You are helping a user refine a project idea.
+
+# The following information is missing:
+# {missing_fields}
+
+# Ask clear, short follow-up questions to collect this information.
+# Do not analyze risk yet.
+# """
+# )
+
 FOLLOWUP_CLARIFICATION_PROMPT = PromptTemplate(
     input_variables=["missing_fields"],
     template="""
-You are helping a user refine a project idea.
+You are helping refine a project proposal.
 
-The following information is missing:
+The following required fields are missing:
 {missing_fields}
 
-Ask clear, short follow-up questions to collect this information.
-Do not analyze risk yet.
+Return ONLY valid JSON in this format:
+
+{
+  "questions": [
+    "Question 1",
+    "Question 2"
+  ]
+}
+
+Do not include explanations.
+Do not include markdown.
 """
 )
