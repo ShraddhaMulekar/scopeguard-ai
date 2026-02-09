@@ -1,7 +1,7 @@
-export default api = 'http://127.0.0.1:8000/analyze'
+import base_url from "./api/base_url";
 
 export const analyzeProject = async (data)=>{
-    const res = await fetch(`${api}`, {
+    const res = await fetch(`${base_url}/analyze`, {
         method:"POST",
         headers : {
             "Content-Type": "application/json",

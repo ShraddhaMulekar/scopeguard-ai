@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { analyzeProject } from "../api";
 
 const AnalyzePage = () => {
   const navigate = useNavigate();
@@ -15,11 +16,43 @@ const AnalyzePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e)=>{
+    e.preventDefault()
+
+    setLoading(true)
+    setError("")
+
+    try {
+      const result = await analyzeProject({
+        ...form,
+        time_weeks: Number(form.time_weeks),
+        team: Number(form.team),
+      })
+
+      // navigate("/result", { state: result })
+    } catch (error) {
+      setError("Something went wrong. Please try again.", error);
+      console.log(error)
+    }
+    finally{
+      setLoading(false)
+    }
+  }
+
+  console.log("form:", form);
+
   return (
-    <div>
+    <div className="container">
       <h2>Project Risk Analyzer</h2>
 
-      <form action="">
+      <form onSubmit={handleSubmit} className="form">
         <input
           type="text"
           name="idea"
@@ -59,8 +92,8 @@ const AnalyzePage = () => {
           {loading ? "Analyzing..." : "Analyze"}
         </button>
       </form>
-      
-      {loading && <Spinner />}
+
+      {loading}
       {error && <p className="error">{error}</p>}
     </div>
   );
