@@ -61,7 +61,15 @@ const AnalyzePage = () => {
 
   return (
     <div className="container">
-      <h2>Project Risk Analyzer</h2>
+
+      <div className="cont">
+        <img
+          className="logo"
+          src="https://cdn.prod.website-files.com/646e363f9c29e4860c52c82e/646e363f9c29e4860c52c88c_CCE%20(1).png"
+          alt="logo"
+        />
+        <h1>Scope Guard AI (Project Risk Analyzer)</h1>
+      </div>
 
       <form onSubmit={handleSubmit} className="form">
         <input

@@ -9,6 +9,21 @@ body {
   padding: 20px;
 }
 
+.cont{
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo{
+  width: 50px;
+}
+
+.cont h1{
+  color: rgb(17, 104, 145);
+}
+
 .form input {
   display: block;
   width: 100%;
@@ -19,6 +34,12 @@ body {
 button {
   padding: 10px 15px;
   cursor: pointer;
+  /* background: rgb(109, 167, 193); */
+  color: #03295b;
+  font-weight: bolder;
+  border: none;
+  border-radius: 8%;
+  box-shadow: rgb(109, 134, 193) 0px 2px 8px;
 }
 
 .card {
@@ -26,6 +47,7 @@ button {
   border-radius: 10px;
   margin-top: 20px;
 }
+
 
 .high {
   background: #ffe5e5;
