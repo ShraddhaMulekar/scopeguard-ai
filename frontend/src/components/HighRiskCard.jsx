@@ -1,4 +1,5 @@
 function HighRiskCard({ data }) {
+
   return (
     <div className="card high">
       <h2>⚠ HIGH RISK</h2>

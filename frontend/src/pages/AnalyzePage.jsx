@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { analyzeProject } from "../api";
-import Spinner from "../components/Spinner"
-import "../styles.css"
+import Spinner from "../components/Spinner";
+import "../styles.css";
+import base_url from "../api/base_url";
 
 const AnalyzePage = () => {
   const navigate = useNavigate();
-  console.log("AnalyzePage rendering");
 
   const [form, setForm] = useState({
     idea: "",
@@ -26,31 +26,39 @@ const AnalyzePage = () => {
     });
   };
 
-  const handleSubmit = async (e)=>{
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    setLoading(true)
-    setError("")
+    setLoading(true);
+    setError("");
 
     try {
-      const result = await analyzeProject({
-        ...form,
-        time_weeks: Number(form.time_weeks),
-        team: Number(form.team),
-      })
-      console.log("result:", result)
+      const res = await fetch(`${base_url}/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          time_weeks: Number(form.time_weeks),
+          team: Number(form.team),
+        }),
+      });
 
-      navigate("/result", { state: result })
-    } catch (error) {
-      setError("Something went wrong. Please try again.", error);
-      console.log(error)
-    }
-    finally{
-      setLoading(false)
-    }
-  }
+      if (!res.ok) {
+        throw new Error("Server error");
+      }
 
-  console.log("form:", form);
+      const data = await res.json();
+
+      navigate("/result", { state: data });
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="container">

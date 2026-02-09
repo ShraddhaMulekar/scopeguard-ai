@@ -1,5 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import HighRiskCard from "../components/HighRiskCard";
+import LowRiskCard from "../components/LowRiskCard";
 
 const ResultPage = () => {
   const location = useLocation();

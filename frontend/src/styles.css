@@ -1,6 +1,6 @@
 body {
+  display: inline;
   font-family: Arial;
-  background: #f4f6f8;
 }
 
 .container {
@@ -30,11 +30,15 @@ button {
 .high {
   background: #ffe5e5;
   border: 2px solid red;
+  color: black;
 }
 
 .low {
+  display: inline-block;
+  align-items: center;
   background: #e6ffe6;
   border: 2px solid green;
+  color: black;
 }
 
 .error {
